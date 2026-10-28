@@ -38,20 +38,20 @@
       <button class="secondary" type="button" id="clearSig">مسح التوقيع</button>
     </div>
     <div class="row">
-      <button type="button" id="makeBtn">إنشاء الملف</button>
+      <button class="whatsapp" type="button" id="makeBtn">إرسال عبر واتساب</button>
     </div>
     <div id="formStatus" class="status"></div>
   </section>
 
   <section class="card hidden" id="resultCard">
-    <p style="margin-top:0;font-weight:700">هذا هو الملف الجاهز:</p>
-    <img id="preview" alt="معاينة الملف">
-    <div id="saveStatus" class="status"></div>
+    <p style="margin-top:0;font-weight:700">تم إنشاء الملف. إذا لم يُفتح واتساب، اضغط الزر مرة أخرى:</p>
     <div class="row">
       <button class="whatsapp" type="button" id="shareBtn">إرسال عبر واتساب</button>
-      <button type="button" id="downloadBtn">تنزيل الملف PDF</button>
     </div>
+    <div id="saveStatus" class="status"></div>
+    <img id="preview" alt="معاينة الملف" style="margin-top:12px">
     <div class="row">
+      <button class="ghost" type="button" id="downloadBtn">تنزيل الملف</button>
       <button class="ghost" type="button" id="backBtn">تعديل البيانات</button>
     </div>
   </section>

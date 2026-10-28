@@ -95,7 +95,7 @@
     if(!hasSig){ status($('formStatus'), 'يرجى التوقيع داخل الإطار', 'err'); return; }
     status($('formStatus'), '', '');
     try{ localStorage.setItem('mabeet', JSON.stringify({guardian:d.guardian,student:d.student,phone:d.phone})); }catch(e){}
-    $('makeBtn').disabled = true; $('makeBtn').textContent = 'جاري الإنشاء...';
+    $('makeBtn').disabled = true; $('makeBtn').textContent = 'جاري التجهيز...';
     try{
       await render(d);
       const img = page.toDataURL('image/jpeg', 0.92);
@@ -108,8 +108,9 @@
       $('formCard').classList.add('hidden'); $('resultCard').classList.remove('hidden');
       window.scrollTo({top:0,behavior:'smooth'});
       upload(d, img);
+      await share();
     }catch(e){ console.error(e); status($('formStatus'), 'حدث خطأ، حاول مرة أخرى', 'err'); }
-    $('makeBtn').disabled = false; $('makeBtn').textContent = 'إنشاء الملف';
+    $('makeBtn').disabled = false; $('makeBtn').textContent = 'إرسال عبر واتساب';
   };
 
   async function upload(d, img){
@@ -129,7 +130,7 @@
   }
   $('downloadBtn').onclick = download;
 
-  $('shareBtn').onclick = async ()=>{
+  async function share(){
     const file = new File([pdfBlob], fileName, {type:'application/pdf'});
     if(navigator.canShare && navigator.canShare({files:[file]})){
       try{ await navigator.share({files:[file], title:'تعهد ولي الأمر'}); return; }catch(e){ if(e.name==='AbortError') return; }
@@ -137,7 +138,8 @@
     download();
     const txt = encodeURIComponent('تعهد ولي الأمر — تم تنزيل الملف على الجهاز، أرفقه هنا من فضلك.');
     const url = C.ADMIN_WHATSAPP ? `https://wa.me/${C.ADMIN_WHATSAPP}?text=${txt}` : `https://wa.me/?text=${txt}`;
-    setTimeout(()=>window.open(url,'_blank'), 800);
-  };
+    setTimeout(()=>{ location.href = url; }, 800);
+  }
+  $('shareBtn').onclick = share;
   $('backBtn').onclick = ()=>{ $('resultCard').classList.add('hidden'); $('formCard').classList.remove('hidden'); };
 })();
