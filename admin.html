@@ -17,6 +17,21 @@
     <div class="row"><button id="loginBtn">دخول</button></div>
     <div id="loginStatus" class="status"></div>
   </section>
+  <section class="card hidden" id="settings">
+    <h3 style="margin:0 0 6px">بيانات المبيت القادم</h3>
+    <p class="hint" style="margin:0">تظهر هذه البيانات تلقائياً لولي الأمر عند فتح الرابط.</p>
+    <label>المسجد</label>
+    <input id="s_mosque">
+    <label>اليوم</label>
+    <select id="s_day">
+      <option value="">اختر اليوم</option>
+      <option>السبت</option><option>الأحد</option><option>الاثنين</option><option>الثلاثاء</option><option>الأربعاء</option><option>الخميس</option><option>الجمعة</option>
+    </select>
+    <label>التاريخ</label>
+    <input id="s_date" type="date">
+    <div class="row"><button id="saveSettings">حفظ البيانات</button></div>
+    <div id="settingsStatus" class="status"></div>
+  </section>
   <section class="card hidden" id="list">
     <div class="row" style="margin:0 0 10px">
       <button class="secondary" id="refresh">تحديث</button>
@@ -37,7 +52,8 @@
       const r = await fetch(`${C.SCRIPT_URL}?action=list&key=${encodeURIComponent(key)}`); const j = await r.json();
       if(!j.ok) throw new Error(j.error||'خطأ');
       sessionStorage.setItem('mabeet_key', key);
-      $('login').classList.add('hidden'); $('list').classList.remove('hidden');
+      $('login').classList.add('hidden'); $('list').classList.remove('hidden'); $('settings').classList.remove('hidden');
+      const st2 = j.settings||{}; $('s_mosque').value=st2.mosque||''; $('s_day').value=st2.day||''; $('s_date').value=st2.date||'';
       $('openFolder').onclick=()=>window.open(j.folderUrl,'_blank');
       $('count').textContent = `عدد الملفات: ${j.files.length}`;
       $('rows').innerHTML = j.files.map((f,i)=>`<tr><td>${i+1}</td><td>${esc(f.student)}</td><td>${esc(f.guardian)}</td><td dir="ltr">${esc(f.phone)}</td><td>${esc(f.created)}</td><td><a class="dl" href="${f.url}" target="_blank">تنزيل</a></td></tr>`).join('') || '<tr><td colspan="6">لا توجد ملفات بعد</td></tr>';
@@ -46,6 +62,14 @@
   const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   $('loginBtn').onclick=()=>{ key=$('key').value.trim(); load(); };
   $('refresh').onclick=load;
+  $('saveSettings').onclick=async()=>{
+    const st=$('settingsStatus'); st.textContent='جاري الحفظ...'; st.className='status ok';
+    try{
+      const r=await fetch(C.SCRIPT_URL,{method:'POST',body:JSON.stringify({action:'setSettings',key,settings:{mosque:$('s_mosque').value.trim(),day:$('s_day').value,date:$('s_date').value}})});
+      const j=await r.json(); if(!j.ok) throw new Error(j.error||'خطأ');
+      st.textContent='تم الحفظ ✓ ولي الأمر سيرى هذه البيانات الآن'; st.className='status ok';
+    }catch(e){ st.textContent='فشل الحفظ: '+e.message; st.className='status err'; }
+  };
   if(key && C.SCRIPT_URL) load();
 })();
 </script>

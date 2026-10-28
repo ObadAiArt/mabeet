@@ -8,6 +8,10 @@ function getFolder() {
   const it = DriveApp.getFoldersByName(FOLDER_NAME);
   return it.hasNext() ? it.next() : DriveApp.createFolder(FOLDER_NAME);
 }
+function getSettings() {
+  const p = PropertiesService.getScriptProperties();
+  return { mosque: p.getProperty('mosque') || '', day: p.getProperty('day') || '', date: p.getProperty('date') || '' };
+}
 function json(o) {
   return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON);
 }
@@ -16,6 +20,12 @@ function json(o) {
 function doPost(e) {
   try {
     const body = JSON.parse(e.postData.contents);
+    if (body.action === 'setSettings') {
+      if (body.key !== ADMIN_KEY) return json({ ok: false, error: 'كلمة المرور غير صحيحة' });
+      const s = body.settings || {};
+      PropertiesService.getScriptProperties().setProperties({ mosque: s.mosque || '', day: s.day || '', date: s.date || '' });
+      return json({ ok: true });
+    }
     if (body.action !== 'save') return json({ ok: false, error: 'bad action' });
     const d = body.data || {};
     const b64 = String(body.image).split(',')[1];
@@ -33,6 +43,7 @@ function doPost(e) {
 // قائمة الملفات (لصفحة المسؤول)
 function doGet(e) {
   const p = e.parameter || {};
+  if (p.action === 'settings') return json(Object.assign({ ok: true }, getSettings()));
   if (p.key !== ADMIN_KEY) return json({ ok: false, error: 'كلمة المرور غير صحيحة' });
   if (p.action !== 'list') return json({ ok: false, error: 'bad action' });
   const folder = getFolder();
@@ -51,5 +62,5 @@ function doGet(e) {
     });
   }
   files.sort((a, b) => b.ts - a.ts);
-  return json({ ok: true, files, folderUrl: folder.getUrl() });
+  return json({ ok: true, files, folderUrl: folder.getUrl(), settings: getSettings() });
 }

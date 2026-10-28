@@ -1,11 +1,5 @@
-// إعدادات الموقع — عدّل هذه القيم فقط
+// إعدادات الموقع
 window.CONFIG = {
-  // رابط Google Apps Script بعد النشر (اختياري). إذا تركته فارغاً سيعمل الموقع بدون حفظ النسخ للمسؤول
-  SCRIPT_URL: "",
-  // رقم واتساب المسؤول بصيغة دولية بدون + أو أصفار (مثال: 963912345678). اختياري
-  ADMIN_WHATSAPP: "",
-  // قيم افتراضية تظهر في النموذج (يمكن تركها فارغة)
-  DEFAULT_MOSQUE: "",
-  DEFAULT_DAY: "",
-  DEFAULT_DATE: "",
+  // رابط Google Apps Script بعد النشر (انظر README)
+  SCRIPT_URL: "https://script.google.com/macros/s/AKfycbzdZ4T5MU5LLPCZxN07CrzN4NNe7Cruw4-bdOVylVvYjRaQke2Vfycozug-drdTFBFo/exec",
 };

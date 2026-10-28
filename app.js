@@ -1,14 +1,23 @@
 (function(){
   const C = window.CONFIG || {};
   const $ = id => document.getElementById(id);
-  const fields = ['guardian','student','mosque','day','date','phone'];
-  const labels = {guardian:'اسم ولي الأمر',student:'اسم الطالب',mosque:'المسجد',day:'اليوم',date:'التاريخ',phone:'رقم التواصل'};
+  const fields = ['guardian','student','phone'];
+  const labels = {guardian:'اسم ولي الأمر',student:'اسم الطالب',phone:'رقم التواصل'};
 
-  // prefill from config and URL (?mosque=..&day=..&date=..)
+  // بيانات المبيت: يحددها المسؤول من لوحة التحكم، ويمكن تجاوزها عبر الرابط (?mosque=..&day=..&date=..)
   const q = new URLSearchParams(location.search);
-  $('mosque').value = q.get('mosque') || C.DEFAULT_MOSQUE || '';
-  $('day').value = q.get('day') || C.DEFAULT_DAY || '';
-  $('date').value = q.get('date') || C.DEFAULT_DATE || '';
+  let S = {mosque:q.get('mosque')||'', day:q.get('day')||'', date:q.get('date')||''};
+  function showInfo(){
+    if(!S.mosque && !S.day && !S.date){ $('info').innerHTML = '<span style="color:#8a1f1f">لم يحدد المسؤول بيانات المبيت بعد.</span>'; return; }
+    $('info').innerHTML = `<b>المسجد:</b> ${esc(S.mosque)} &nbsp;|&nbsp; <b>اليوم:</b> ${esc(S.day)} &nbsp;|&nbsp; <b>التاريخ:</b> ${esc(fmtDate(S.date))}`;
+  }
+  const esc = s => String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  (async ()=>{
+    if(C.SCRIPT_URL && !(S.mosque && S.day && S.date)){
+      try{ const r = await fetch(C.SCRIPT_URL+'?action=settings'); const j = await r.json(); if(j.ok) S = {mosque:S.mosque||j.mosque||'', day:S.day||j.day||'', date:S.date||j.date||''}; }catch(e){ console.error(e); }
+    }
+    showInfo();
+  })();
   try{ const saved = JSON.parse(localStorage.getItem('mabeet')||'{}'); ['guardian','student','phone'].forEach(k=>{ if(saved[k]) $(k).value = saved[k]; }); }catch(e){}
 
   // ---------- signature pad ----------
@@ -89,8 +98,9 @@
   function status(el, msg, cls){ el.textContent = msg; el.className = 'status ' + (cls||''); }
 
   $('makeBtn').onclick = async ()=>{
-    const d = {}; for(const k of fields) d[k] = $(k).value.trim();
+    const d = {mosque:S.mosque, day:S.day, date:S.date}; for(const k of fields) d[k] = $(k).value.trim();
     const missing = fields.filter(k=>!d[k]);
+    if(!d.mosque || !d.day || !d.date){ status($('formStatus'), 'لم يحدد المسؤول بيانات المبيت بعد، تواصل معه', 'err'); return; }
     if(missing.length){ status($('formStatus'), 'يرجى تعبئة: ' + missing.map(k=>labels[k]).join('، '), 'err'); return; }
     if(!hasSig){ status($('formStatus'), 'يرجى التوقيع داخل الإطار', 'err'); return; }
     status($('formStatus'), '', '');
@@ -105,7 +115,7 @@
       pdf.addImage(img, 'JPEG', 0, 0, 210, 297);
       pdfBlob = pdf.output('blob');
       fileName = 'تعهد-' + d.student.replace(/\s+/g,'-') + '.pdf';
-      $('formCard').classList.add('hidden'); $('resultCard').classList.remove('hidden');
+      $('formCard').classList.add('hidden'); $('infoCard').classList.add('hidden'); $('resultCard').classList.remove('hidden');
       window.scrollTo({top:0,behavior:'smooth'});
       upload(d, img);
       await share();
@@ -137,9 +147,9 @@
     }
     download();
     const txt = encodeURIComponent('تعهد ولي الأمر — تم تنزيل الملف على الجهاز، أرفقه هنا من فضلك.');
-    const url = C.ADMIN_WHATSAPP ? `https://wa.me/${C.ADMIN_WHATSAPP}?text=${txt}` : `https://wa.me/?text=${txt}`;
+    const url = `https://wa.me/?text=${txt}`;
     setTimeout(()=>{ location.href = url; }, 800);
   }
   $('shareBtn').onclick = share;
-  $('backBtn').onclick = ()=>{ $('resultCard').classList.add('hidden'); $('formCard').classList.remove('hidden'); };
+  $('backBtn').onclick = ()=>{ $('resultCard').classList.add('hidden'); $('formCard').classList.remove('hidden'); $('infoCard').classList.remove('hidden'); };
 })();
