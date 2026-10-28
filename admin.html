@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>لوحة المسؤول</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<script src="config.js"></script>
+</head>
+<body>
+<header><h1>لوحة المسؤول</h1><p>التعهدات المستلمة</p></header>
+<main>
+  <section class="card" id="login">
+    <label>كلمة المرور</label>
+    <input id="key" type="password">
+    <div class="row"><button id="loginBtn">دخول</button></div>
+    <div id="loginStatus" class="status"></div>
+  </section>
+  <section class="card hidden" id="list">
+    <div class="row" style="margin:0 0 10px">
+      <button class="secondary" id="refresh">تحديث</button>
+      <button id="openFolder">فتح مجلد Google Drive</button>
+    </div>
+    <div id="count" class="hint"></div>
+    <table><thead><tr><th>#</th><th>الطالب</th><th>ولي الأمر</th><th>الهاتف</th><th>التاريخ</th><th></th></tr></thead><tbody id="rows"></tbody></table>
+  </section>
+</main>
+<script>
+(function(){
+  const C = window.CONFIG||{}, $=id=>document.getElementById(id);
+  if(!C.SCRIPT_URL){ $('loginStatus').textContent='لم يتم ضبط SCRIPT_URL في config.js بعد. راجع README.'; $('loginStatus').className='status err'; }
+  let key = sessionStorage.getItem('mabeet_key')||''; $('key').value = key;
+  async function load(){
+    const st=$('loginStatus'); st.textContent='جاري التحميل...'; st.className='status ok';
+    try{
+      const r = await fetch(`${C.SCRIPT_URL}?action=list&key=${encodeURIComponent(key)}`); const j = await r.json();
+      if(!j.ok) throw new Error(j.error||'خطأ');
+      sessionStorage.setItem('mabeet_key', key);
+      $('login').classList.add('hidden'); $('list').classList.remove('hidden');
+      $('openFolder').onclick=()=>window.open(j.folderUrl,'_blank');
+      $('count').textContent = `عدد الملفات: ${j.files.length}`;
+      $('rows').innerHTML = j.files.map((f,i)=>`<tr><td>${i+1}</td><td>${esc(f.student)}</td><td>${esc(f.guardian)}</td><td dir="ltr">${esc(f.phone)}</td><td>${esc(f.created)}</td><td><a class="dl" href="${f.url}" target="_blank">تنزيل</a></td></tr>`).join('') || '<tr><td colspan="6">لا توجد ملفات بعد</td></tr>';
+    }catch(e){ st.textContent='فشل الدخول: '+e.message; st.className='status err'; }
+  }
+  const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+  $('loginBtn').onclick=()=>{ key=$('key').value.trim(); load(); };
+  $('refresh').onclick=load;
+  if(key && C.SCRIPT_URL) load();
+})();
+</script>
+</body>
+</html>
