@@ -48,6 +48,15 @@
   $('refresh').onclick=load;
 
   const loadImg = src => new Promise((res,rej)=>{ const im=new Image(); im.onload=()=>res(im); im.onerror=rej; im.src=src; });
+  // التعهدات القديمة حُفظت كصفحة كاملة (طولية)؛ نقصّ منها مربع التوقيع فقط
+  function extractSig(img){
+    if(img.width >= img.height) return img;
+    const k = img.width/1240, c = document.createElement('canvas');
+    const sx=120*k, sy=1065*k, sw=440*k, sh=210*k;
+    c.width = sw; c.height = sh;
+    c.getContext('2d').drawImage(img, sx, sy, sw, sh, 0, 0, sw, sh);
+    return c;
+  }
 
   $('pdfBtn').onclick=async()=>{
     const sel = picked(); if(!sel.length) return;
@@ -60,7 +69,7 @@
         status($('pdfStatus'),`جاري تجهيز ${i+1} من ${sel.length}...`,'ok');
         const r = await fetch(`${C.SCRIPT_URL}?action=get&key=${encodeURIComponent(key)}&id=${sel[i].id}`); const j = await r.json();
         if(!j.ok) throw new Error(j.error||'تعذر جلب التوقيع');
-        const sigImg = await loadImg(j.image);
+        const sigImg = extractSig(await loadImg(j.image));
         await window.renderConsent($('page'), Object.assign({}, sel[i], S), sigImg);
         if(i>0) pdf.addPage();
         pdf.addImage($('page').toDataURL('image/jpeg',0.9),'JPEG',0,0,210,297);
