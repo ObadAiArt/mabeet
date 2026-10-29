@@ -19,15 +19,30 @@
       if(!j.ok) throw new Error(j.error||'خطأ');
       sessionStorage.setItem('mabeet_key', key); files = j.files;
       $('login').classList.add('hidden'); $('list').classList.remove('hidden'); $('settings').classList.remove('hidden');
+      files.sort((a,b)=>a.ts-b.ts); // الأقدم أولاً: أول من سلّم هو رقم 1
       $('count').textContent = `عدد التعهدات: ${files.length}`;
-      $('rows').innerHTML = files.map((f,i)=>`<tr><td><input type="checkbox" class="pick" data-i="${i}" style="width:22px;height:22px"></td><td>${esc(f.student)}</td><td>${esc(f.guardian)}</td><td dir="ltr">${esc(f.phone)}</td><td>${esc(f.created)}</td></tr>`).join('') || '<tr><td colspan="5">لا توجد تعهدات بعد</td></tr>';
-      $('all').checked=false; updateBtn();
+      renderGroups(); updateBtn();
     }catch(e){ status(st,'فشل الدخول: '+e.message,'err'); }
   }
+  function renderGroups(){
+    const groups = {};
+    files.forEach((f,i)=>{ const day=f.created.slice(0,10); (groups[day]=groups[day]||[]).push(i); });
+    const days = Object.keys(groups).sort();
+    let n = 0;
+    $('groups').innerHTML = days.map((day,gi)=>`<details class="group" ${gi===days.length-1?'open':''}>
+      <summary><input type="checkbox" class="gall" data-day="${day}" title="تحديد الكل"> ${day} <span class="hint">(${groups[day].length})</span><span class="arrow">▾</span></summary>
+      <table><thead><tr><th></th><th>#</th><th>الطالب</th><th>ولي الأمر</th><th>الهاتف</th><th>الوقت</th></tr></thead><tbody>
+      ${groups[day].map(i=>{ const f=files[i]; n++; return `<tr><td><input type="checkbox" class="pick" data-i="${i}" data-day="${day}"></td><td>${n}</td><td>${esc(f.student)}</td><td>${esc(f.guardian)}</td><td dir="ltr">${esc(f.phone)}</td><td>${esc(f.created.slice(11))}</td></tr>`; }).join('')}
+      </tbody></table></details>`).join('') || '<p class="hint">لا توجد تعهدات بعد</p>';
+  }
+  $('groups').addEventListener('click', e=>{ if(e.target.matches('.gall')) e.stopPropagation(); });
+  $('groups').addEventListener('change', e=>{
+    if(e.target.matches('.gall')){ document.querySelectorAll(`.pick[data-day="${e.target.dataset.day}"]`).forEach(c=>c.checked=e.target.checked); }
+    else if(e.target.matches('.pick')){ const d=e.target.dataset.day; const all=[...document.querySelectorAll(`.pick[data-day="${d}"]`)]; document.querySelector(`.gall[data-day="${d}"]`).checked = all.every(c=>c.checked); }
+    updateBtn();
+  });
   const picked=()=>[...document.querySelectorAll('.pick:checked')].map(c=>files[+c.dataset.i]);
   function updateBtn(){ const n=picked().length; $('pdfBtn').disabled=!n; $('pdfBtn').textContent=`تنزيل الملف (${n})`; }
-  $('rows').addEventListener('change', updateBtn);
-  $('all').onchange=()=>{ document.querySelectorAll('.pick').forEach(c=>c.checked=$('all').checked); updateBtn(); };
   $('loginBtn').onclick=()=>{ key=$('key').value.trim(); load(); };
   $('key').addEventListener('keydown',e=>{ if(e.key==='Enter') $('loginBtn').click(); });
   $('refresh').onclick=load;

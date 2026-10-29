@@ -28,3 +28,14 @@ footer{text-align:center;color:#6b7a72;font-size:.85rem;padding:20px}
 table{width:100%;border-collapse:collapse;font-size:.95rem}
 td,th{padding:10px 8px;border-bottom:1px solid #e3e8e5;text-align:right}
 a.dl{color:#1d5c3f;font-weight:700;text-decoration:none}
+
+details.group{border:1px solid #dfe6e2;border-radius:10px;margin:10px 0;background:#fff}
+details.group summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:10px 12px;background:#eef3f0;border-radius:10px;font-weight:700}
+details.group[open] summary{border-radius:10px 10px 0 0}
+details.group summary::-webkit-details-marker{display:none}
+details.group summary .arrow{margin-right:auto;transition:transform .2s}
+details.group[open] summary .arrow{transform:rotate(180deg)}
+details.group summary input{width:22px;height:22px;margin:0}
+details.group table{font-size:.95rem}
+details.group td,details.group th{padding:8px 6px}
+.pick{width:22px;height:22px}
